@@ -191,7 +191,7 @@ func Test_Application_Setup(t *testing.T) {
 				WithUI(func(config SetupConfig) ([]UI, error) {
 					return []UI{&mockUI{}}, nil
 				}).
-				WithLogger(func(config SetupConfig) (logger.Logger, error) {
+				WithLoggerConstructor(func(config SetupConfig) (logger.Logger, error) {
 					return newMockLogger(), nil
 				}).WithInitializers(
 				func(cfg SetupConfig, state *State) error {

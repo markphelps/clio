@@ -22,6 +22,7 @@ type Application interface {
 	ID() Identification
 	Run(fn func(ctx context.Context) error) func(cmd *cobra.Command, args []string) error
 	SetupCommand(cmd *cobra.Command, cfgs ...any) *cobra.Command
+	State() *State
 }
 
 type application struct {
@@ -47,19 +48,17 @@ func nonNil(a ...any) []any {
 	return ret
 }
 
+func (a *application) State() *State {
+	return &a.state
+}
+
 func (a application) ID() Identification {
 	return a.setup.ID
 }
 
 func (a *application) PostLoad() error {
-	a.state.setupBus(a.setup.BusConstructor)
-
-	if err := a.state.setupLogger(a.setup.LoggerConstructor); err != nil {
-		return fmt.Errorf("unable to setup logger: %w", err)
-	}
-
-	if err := a.state.setupUI(a.setup.UIConstructor); err != nil {
-		return fmt.Errorf("unable to setup UI: %w", err)
+	if err := a.state.setup(a.setup); err != nil {
+		return err
 	}
 
 	for _, init := range a.setup.Initializers {
@@ -262,7 +261,10 @@ Use "{{if .CommandPath}}{{.CommandPath}} {{end}}[command] --help" for more infor
 		helpFn(cmd, args)
 	})
 
-	return a.setupCommand(cmd, cmd.PersistentFlags(), &cmd.PreRunE, &a.setup)
+	a.state.Config.Log = a.setup.DefaultLoggingConfig
+	a.state.Config.Dev = a.setup.DefaultDevelopmentConfig
+
+	return a.setupCommand(cmd, cmd.PersistentFlags(), &cmd.PreRunE, &a.state.Config)
 }
 
 func async(ctx context.Context, f func(ctx context.Context) error) <-chan error {

@@ -38,7 +38,14 @@ func NewSetupConfig(id Identification) *SetupConfig {
 	}
 }
 
-func (c *SetupConfig) WithUI(constructor UIConstructor) *SetupConfig {
+func (c *SetupConfig) WithUI(uis ...UI) *SetupConfig {
+	c.UIConstructor = func(cfg Config) ([]UI, error) {
+		return uis, nil
+	}
+	return c
+}
+
+func (c *SetupConfig) WithUIConstructor(constructor UIConstructor) *SetupConfig {
 	c.UIConstructor = constructor
 	return c
 }
@@ -55,7 +62,7 @@ func (c *SetupConfig) WithNoBus() *SetupConfig {
 	return c
 }
 
-func (c *SetupConfig) WithLogger(constructor LoggerConstructor) *SetupConfig {
+func (c *SetupConfig) WithLoggerConstructor(constructor LoggerConstructor) *SetupConfig {
 	c.LoggerConstructor = constructor
 	return c
 }
